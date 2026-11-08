@@ -87,13 +87,15 @@ function keepEdits(d){
 function reconcile(day,ps){   // fills day.cells from the photos ps of ONE date
   for(const p of ps){
     if(p.status!=='done') continue;
-    const half=p.half; const maps=p.res.map(()=>({}));
+    const half=p.half; const maps=p.res.map(()=>({})); const n=ps.indexOf(p)+1;
+    const twin=ps.find(q=>q!==p&&q.status==='done'&&q.page===p.page&&q.half===half);
+    if(twin&&ps.indexOf(twin)<ps.indexOf(p)) day.notes.push(`Page ${p.page}: photos ${ps.indexOf(twin)+1} and ${n} were both read as half ${half}. BOTH are counted. If it is the same half photographed twice, delete one and re-run; if they are different pages, fix the page numbers.`);
     if(p.res[1] && p.res[1].half!==half) day.notes.push(`Page ${p.page}: passes disagreed on which half (A/B) — check this photo.`);
     p.res.forEach((r,ri)=>{
       for(const e of (r.entries||[])){
         if(!(e.row>=1&&e.row<=ROWS)||!(e.qty>0)) continue;
         const d=drugOf(half,e.col,e.extra_name);
-        const key=`${p.page}|${half}|${e.row}|${d.k}`;
+        const key=`${p.page}|${half}|${e.row}|${d.k}|${n}`;   // n = photo number: two photos never overwrite each other
         const raw=rawNum(e.raw)||String(e.qty);
         const m=maps[ri]; if(m[key]){ m[key].qty+=e.qty; m[key].conf=false; m[key].raw+='+'+raw; }
         else m[key]={qty:e.qty,conf:e.confident!==false,raw,d};

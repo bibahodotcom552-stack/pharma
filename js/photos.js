@@ -29,7 +29,7 @@ function renderPhotos(){
     return `<div class="ph ${safe?'':'warn'}">${st}<img loading="lazy" src="${p.thumb||p.url}" style="transform:rotate(${p.thumb?0:p.rot}deg)">
     <div class="b">Page <select onchange="photos[${i}].page=+this.value">${Array.from({length:15},(_,k)=>`<option ${p.page==k+1?'selected':''}>${k+1}</option>`).join('')}</select>
     ${p.masked?'<span class="badge b-ok">masked</span>':p.noNames?'<span class="badge b-ok">no names</span>':'<span class="badge b-w">names?</span>'}${p.auto&&(p.masked||p.noNames)?' <span class="badge b-w">auto · check</span>':''}
-    <div class="bt"><button onclick="openEd(${i})">Mask</button><button onclick="photos[${i}].noNames=!photos[${i}].noNames;photos[${i}].auto=false;renderPhotos()">${p.noNames?'Undo':'No names'}</button><button onclick="delPhoto(${i})">✕</button></div></div></div>`;
+    <div class="bt"><button onclick="rot90(${i})" title="Rotate">↻</button><button onclick="openEd(${i})">Mask</button><button onclick="photos[${i}].noNames=!photos[${i}].noNames;photos[${i}].auto=false;renderPhotos()">${p.noNames?'Undo':'No names'}</button><button onclick="delPhoto(${i})">✕</button></div></div></div>`;
     }).join('');
   }).join('');
 }
@@ -41,6 +41,8 @@ function rightNoNames(dt){
 }
 function delDate(dt){ if(!confirm(`Remove all photos of ${fmtD(dt)}?`))return; photos.filter(p=>p.date===dt).forEach(p=>URL.revokeObjectURL(p.url)); photos=photos.filter(p=>p.date!==dt); renderPhotos(); }
 function clearPhotos(){ if(photos.length&&!confirm('Remove ALL photos from the list? (Saved results are kept.)'))return; photos.forEach(p=>URL.revokeObjectURL(p.url)); photos=[]; renderPhotos(); }
+// quick 90° turn from the thumbnail (mask boxes turn with the photo) — upright headers read better
+function rot90(i){ const p=photos[i]; if(p.status==='done')return; p.rects=p.rects.map(r=>({x:1-r.y-r.h,y:r.x,w:r.h,h:r.w})); p.rot=(p.rot+90)%360; p.thumb=null; renderPhotos(); makeThumb(p); }
 function delPhoto(i){ URL.revokeObjectURL(photos[i].url); photos.splice(i,1); renderPhotos(); }
 
 /* ---- mask editor ---- */
