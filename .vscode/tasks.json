@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Ledger: run mock test",
+      "type": "shell",
+      "command": "python tests/mock_test.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ledger: syntax check JS",
+      "type": "shell",
+      "command": "node tests/check_syntax.js",
+      "problemMatcher": []
+    },
+    {
+      "label": "RTK: token savings",
+      "type": "shell",
+      "command": "rtk gain",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ledger: open task queue",
+      "type": "shell",
+      "command": "code TASKS.md",
+      "problemMatcher": []
+    }
+  ]
+}

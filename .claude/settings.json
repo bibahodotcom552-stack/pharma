@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(./**)",
+      "Edit(./**)",
+      "Write(./**)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node --check:*)",
+      "Bash(python tests/mock_test.py:*)",
+      "Bash(python -m pip install playwright:*)",
+      "Bash(playwright install:*)",
+      "Bash(rtk:*)",
+      "Bash(gh auth status:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh api repos/*:*)",
+      "Bash(node tests/check_syntax.js:*)",
+      "Bash(py tests/mock_test.py:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(gh api --method POST:*)",
+      "Bash(gh api --method PUT:*)",
+      "Bash(gh api --method PATCH:*)",
+      "Bash(gh api --method DELETE:*)",
+      "Bash(npm install:*)",
+      "Bash(pip install:*)",
+      "Bash(winget install:*)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(del:*)",
+      "Bash(rmdir:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(gh repo delete:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Read(./**/*.jpg)",
+      "Read(./**/*.jpeg)",
+      "Read(./**/*.png)",
+      "Read(./**/*.zip)",
+      "Read(./**/node_modules/**)",
+      "Read(./**/.env)",
+      "Read(./**/*key*)"
+    ]
+  }
+}

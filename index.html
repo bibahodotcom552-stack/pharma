@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Daily Consumption Auditor</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>💊 Daily Consumption Auditor</h1>
+  <button class="noprint" onclick="toggleSettings()">⚙️</button>
+</header>
+<main>
+
+<section class="card noprint" id="settings" style="display:none">
+  <h2>Settings (one-time)</h2>
+  <label>Google Gemini API key (free — from aistudio.google.com → Get API key)</label>
+  <input type="password" id="apikey" placeholder="AIza..." autocomplete="off">
+  <div class="row" style="margin-top:8px">
+    <button onclick="saveKey()">Save key</button>
+    <button onclick="loadModels()">Load models</button>
+  </div>
+  <label>Model (a "Flash" model is free and best for this)</label>
+  <select id="model"></select>
+  <label>Verification passes</label>
+  <select id="passes">
+    <option value="2">2 passes — row-wise + column-wise, flags disagreements (recommended)</option>
+    <option value="1">1 pass — faster, uses half the free quota</option>
+  </select>
+  <p class="mut">Key and results stay on this phone (browser storage). Photos are only sent to Google for reading, after your privacy mask is applied. Free-tier inputs may be used by Google to improve its models — that is why names must be masked.</p>
+</section>
+
+<section class="card noprint">
+  <h2>1 · Date & photos</h2>
+  <div class="row">
+    <div><label>Register date</label><input type="date" id="date"></div>
+    <div><label>Saved days</label><select id="history" onchange="openDay(this.value)"><option value="">— open saved —</option></select></div>
+  </div>
+  <label>Add photos (left + right halves of each page; up to 15 pages = 30 photos)</label>
+  <input type="file" id="files" accept="image/*" multiple>
+  <p class="mut">Each photo: tap <b>Mask</b> and drag a box over the names / P-No column (left halves), or tap <b>No names</b> for right halves. Page numbers auto-fill 1,1,2,2,3,3… — change if needed.</p>
+  <div class="photos" id="photos"></div>
+</section>
+
+<section class="card noprint">
+  <h2>2 · Read & audit</h2>
+  <button class="pri big" id="runBtn" onclick="runAudit()">▶ Start audit</button>
+  <div class="prog"><div id="bar"></div></div>
+  <div id="log"></div>
+</section>
+
+<section class="card" id="resultCard" style="display:none">
+  <h2 id="resTitle">3 · Results</h2>
+  <div id="stats" class="mut"></div>
+  <div class="tabs noprint">
+    <button class="on" data-t="sum" onclick="tab('sum')">Totals</button>
+    <button data-t="flags" onclick="tab('flags')">Review flags <span id="flagCount"></span></button>
+    <button data-t="notes" onclick="tab('notes')">AI notes</button>
+  </div>
+  <div id="t-sum">
+    <div class="row noprint" style="margin-bottom:8px">
+      <label style="margin:0;flex:2"><input type="checkbox" id="showAll" onchange="renderTable()"> show all drugs (incl. zero)</label>
+      <button onclick="exportCSV()">⬇ CSV</button>
+      <button onclick="copyText()">📋 Copy</button>
+      <button onclick="window.print()">🖨 PDF</button>
+    </div>
+    <div class="scroll"><table id="tbl"></table></div>
+    <details class="noprint" style="margin-top:10px"><summary>➕ Add a missed entry manually</summary>
+      <div class="row" style="margin-top:8px">
+        <select id="mDrug" style="flex:3"></select>
+        <input type="number" id="mPage" placeholder="Page" min="1" style="flex:1">
+        <input type="number" id="mQty" placeholder="Qty" style="flex:1">
+        <button onclick="manualAdd()">Add</button>
+      </div>
+      <input type="text" id="mNew" placeholder="…or type a new drug name (handwritten extra)" style="margin-top:6px">
+    </details>
+  </div>
+  <div id="t-flags" style="display:none"></div>
+  <div id="t-notes" style="display:none" class="mut"></div>
+</section>
+
+</main>
+
+<div id="ed">
+  <div class="tb">
+    <button onclick="edRotate()">↻ Rotate</button>
+    <button onclick="edUndo()">↶ Undo box</button>
+    <button onclick="edClear()">Clear</button>
+    <button class="pri" onclick="edDone()">✔ Done</button>
+  </div>
+  <div class="hint">Drag to black-out names / P-No. Rotate so headers read upright (helps accuracy).</div>
+  <div class="cv"><canvas id="edc"></canvas></div>
+</div>
+
+<footer>Zero-patient-data audit · totals only · always spot-check flagged cells against the register</footer>
+
+<script src="js/template.js"></script>
+<script src="js/state.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/photos.js"></script>
+<script src="js/prompt.js"></script>
+<script src="js/gemini.js"></script>
+<script src="js/audit.js"></script>
+<script src="js/results.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
