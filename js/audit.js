@@ -9,34 +9,83 @@ function drugOf(half,col,extra){
 
 async function runAudit(){
   if(!photos.length){alert('Add photos first');return}
-  const date=$('#date').value; if(!date){alert('Pick the register date');return}
-  const unsafe=photos.filter(p=>!p.masked&&!p.noNames);
+  const todo=photos.filter(p=>p.status!=='done');
+  if(!todo.length){alert('All photos are already read and saved.\nTap "Clear all photos" to start a new batch.');return}
+  const unsafe=todo.filter(p=>!p.masked&&!p.noNames);
   if(unsafe.length && !confirm(`${unsafe.length} photo(s) have no privacy mask and are not marked "No names".\nPatient names could be sent to Google.\n\nSend anyway?`)) return;
-  const passes=+$('#passes').value||2;
-  $('#runBtn').disabled=true; $('#log').textContent='';
-  day={date,cells:{},notes:[],extras:{},pages:Math.max(...photos.map(p=>p.page))};
-  const total=photos.length*passes; let done=0;
-  for(const p of photos){
-    p.status='run'; p.res=[]; renderPhotos();
-    try{
-      log(`📄 Page ${p.page}: preparing image…`);
-      const b64=await prepImage(p);
-      for(let k=0;k<passes;k++){
-        log(`  🔎 pass ${k+1}/${passes} (${k?'column-wise':'row-wise'})…`);
-        p.res.push(await gemini(b64,k));
-        done++; $('#bar').style.width=(100*done/total)+'%';
-      }
-      for(const r of p.res) r.half = r.half==='B'?'B':'A';   // only A/B ever reaches the screen
-      p.half=p.res[0].half; p.status='done';
-      log(`  ✔ half ${p.half}: ${p.res.map(r=>(r.entries||[]).length).join(' / ')} entries`);
-    }catch(e){ p.status='err'; log('  ✖ '+e.message); done+=passes-p.res.length; $('#bar').style.width=(100*done/total)+'%'; if(/quota|API key|model/i.test(e.message)) break; }
-    renderPhotos();
+  const auto=todo.filter(p=>p.auto&&(p.masked||p.noNames));
+  if(auto.length){
+    if(!confirm(`${auto.length} photo(s) were masked or marked "No names" AUTOMATICALLY (badge "auto · check").\nDid you look at every one?\n• copied mask: black box covers ALL names / P-No\n• "No names": it really is a RIGHT half\n\nOK = yes, all checked. Cancel = go back and check.`)) return;
+    auto.forEach(p=>p.auto=false); renderPhotos();
   }
-  reconcile(); saveDay(); render(); $('#runBtn').disabled=false; log('✅ Finished.');
+  const passes=+$('#passes').value||2;
+  const dates=[...new Set(photos.map(p=>p.date))].sort();
+  if(dates.length>1 && !confirm(`${dates.length} dates, ${todo.length} photo(s) to read = about ${todo.length*passes} AI requests.\nEach date is saved as soon as it is finished. If the free daily limit runs out, the app tries another free model; if all are used up it stops and you press Start again later.\n\nStart?`)) return;
+  $('#runBtn').disabled=true; $('#log').textContent='';
+  const total=todo.length*passes; let done=0, stop=false, saved=0; const tried=new Set([$('#model').value]);
+  const bar=()=>$('#bar').style.width=(100*done/total)+'%'; bar();
+  for(const date of dates){
+    const ps=photos.filter(p=>p.date===date);
+    if(ps.every(p=>p.status==='done')) continue;          // finished in an earlier run, already saved
+    log(`📅 ${fmtD(date)} — ${ps.length} photo(s)`);
+    for(const p of ps){
+      if(p.status==='done') continue;
+      p.status='run'; p.res=[]; renderPhotos();
+      try{
+        log(`📄 Page ${p.page}: preparing image…`);
+        const b64=await prepImage(p);
+        for(let k=0;k<passes;k++){
+          log(`  🔎 pass ${k+1}/${passes} (${k?'column-wise':'row-wise'})…`);
+          try{ p.res.push(await gemini(b64,k)); }
+          catch(e){ if(e.quota&&switchModel(tried)){ k--; continue; } throw e; }
+          done++; bar();
+        }
+        for(const r of p.res) r.half = r.half==='B'?'B':'A';   // only A/B ever reaches the screen
+        p.half=p.res[0].half; p.status='done';
+        log(`  ✔ half ${p.half}: ${p.res.map(r=>(r.entries||[]).length).join(' / ')} entries`);
+      }catch(e){
+        p.status='err'; log('  ✖ '+e.message); done+=passes-p.res.length; bar();
+        if(e.quota||/quota|API key|model/i.test(e.message)){ stop=true; renderPhotos(); break; }
+      }
+      renderPhotos();
+    }
+    if(stop && !ps.every(p=>p.status==='done')){ log(`  ⏸ ${fmtD(date)} not finished — not saved yet.`); break; }
+    day=keepEdits(buildDay(date,ps)); saveDay(); saved++; log(`  💾 ${fmtD(date)} saved.`);
+  }
+  $('#runBtn').disabled=false;
+  const left=[...new Set(photos.filter(p=>p.status!=='done').map(p=>p.date))].sort();
+  if(stop) log(`\n⏸ Stopped: free daily limit used up on all free models.\nLeft to do: ${left.map(fmtD).join(', ')}\nKeep this page open and press Start again after ~2 PM Bangladesh time — only the unfinished photos are read. (If you close the page, add the photos of those dates again.)`);
+  else log(left.length? `\n⚠ Finished, but some photos had errors (${left.map(fmtD).join(', ')}). Press Start again to retry them.` : '\n✅ Finished.');
+  if(day) render();
+  if(dates.length>1&&saved){ $('#pFrom').value=dates[0]; $('#pTo').value=dates[dates.length-1]; renderPeriod(); $('#periodCard').scrollIntoView({behavior:'smooth'}); }
+}
+// On a daily-quota error: move to the next free Flash model not tried yet (each model has its own daily limit).
+function switchModel(tried){
+  const d=store.get(); const next=(d.models||[]).find(m=>/flash/i.test(m)&&!/pro/i.test(m)&&!tried.has(m));
+  if(!next) return false;
+  tried.add(next); $('#model').value=next; log(`  🔁 daily limit reached — switching to ${next}`); return true;
+}
+function buildDay(date,ps){
+  const d={date,cells:{},notes:[],extras:{},pages:Math.max(...ps.map(p=>p.page)),photos:ps.length};
+  const miss=ps.filter(p=>p.status!=='done').length;
+  if(miss){ d.missing=miss; d.notes.push(`${miss} photo(s) could not be read — totals for this date are INCOMPLETE. Add them again and re-run, or add entries manually.`); }
+  reconcile(d,ps); return d;
+}
+// Re-reading a date that was saved before: keep your ✔ confirmed numbers, manual entries and renamed handwritten drugs.
+function keepEdits(d){
+  const old=(store.get().days||{})[d.date]; if(!old) return d;
+  for(const [k,c] of Object.entries(old.cells||{})){
+    if(c.half==='M'){ d.cells[k]=c; d.pages=Math.max(d.pages,c.page); continue; }
+    const n=d.cells[k]; if(!n) continue;
+    if(c.ok){ n.final=c.final; n.ok=true; }
+    if(c.extra&&c.dk!==n.dk){ n.dk=c.dk; n.label=c.label; }
+  }
+  d.extras={}; for(const c of Object.values(d.cells)) if(c.extra) d.extras[c.dk]=d.extras[c.dk]||c.label;
+  return d;
 }
 
-function reconcile(){
-  for(const p of photos){
+function reconcile(day,ps){   // fills day.cells from the photos ps of ONE date
+  for(const p of ps){
     if(p.status!=='done') continue;
     const half=p.half; const maps=p.res.map(()=>({}));
     if(p.res[1] && p.res[1].half!==half) day.notes.push(`Page ${p.page}: passes disagreed on which half (A/B) — check this photo.`);

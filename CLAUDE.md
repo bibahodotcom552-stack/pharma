@@ -12,7 +12,9 @@ Output (screen, CSV, Copy) = Drug + Total only; never patient details.
 Each sheet is 38 patient rows x 87 printed drug columns, photographed as two halves:
 - Half A = Acetylsalicylic acid ... Furosemide (40 columns, includes names/P-No column)
 - Half B = Glibenclamide ... Zinc Oxide (47 columns) + blank columns for up to ~5 handwritten extra drugs
-Up to 15 pages (30 photos) per date.
+Up to 15 pages (30 photos) per date. **Month mode:** many dates in one run (user audits every 7–15 days or a month);
+each photo carries its `date`; every date is saved as soon as it is finished; section 4 "Period report" sums saved
+dates From..To = period total + each date's total per register item.
 
 ## Hard rules (never break)
 1. **Zero cost.** Only the Google Gemini API free tier (Flash models). No paid APIs, no server, no database.
@@ -22,6 +24,8 @@ Up to 15 pages (30 photos) per date.
    also works opened from a file. Inline `onclick` handlers rely on global functions.
 4. Runs on Android Chrome; touch-first UI; dark theme.
 5. Results (not photos) are saved in localStorage under the key `ledgerAudit`.
+6. **The 87 printed drug columns are FIXED** (user-confirmed 2026-11-08). Never add, remove, reorder or rename
+   `HALF_A` / `HALF_B` unless the user says the printed register changed. Totals stay per register item (no merging by generic).
 
 ## File map (read only what the task needs)
 | File | Purpose |
@@ -29,9 +33,9 @@ Up to 15 pages (30 photos) per date.
 | `js/template.js` | Drug column lists `HALF_A`, `HALF_B`, `ROWS`. Edit ONLY here if the register changes. |
 | `js/prompt.js` | AI reading rules (`BASE`), pass methods (`PASS_TXT`), JSON `SCHEMA`. Accuracy tuning goes here. |
 | `js/gemini.js` | REST call, 429 back-off, `mockReply()` for key `MOCK`. |
-| `js/photos.js` | Photo grid, mask editor (rotate + black boxes), `prepImage()` (resize 2600px, JPEG 0.9). |
-| `js/audit.js` | `runAudit()` loop, `reconcile()` merges the 2 passes into `day.cells`, sets `flag`. |
-| `js/results.js` | Totals table, review flags, manual add, CSV/copy/print, history. |
+| `js/photos.js` | Photo grid grouped by date, "Right halves → No names", mask editor (+ copy mask to all left halves), masked thumbnails, `prepImage()` (resize 2600px, JPEG 0.9). |
+| `js/audit.js` | `runAudit()` loops dates, saves each finished date, resumes, `switchModel()` on daily quota; `buildDay()`; `reconcile(day,ps)` merges the 2 passes, sets `flag`. |
+| `js/results.js` | One-date totals, review flags, manual add, CSV/copy/print, history; period report (`periodData`, `renderPeriod`, CSV, copy). |
 | `js/settings.js` | API key, auto-lists free Gemini models, number of passes. |
 | `js/state.js`, `js/app.js` | Globals/storage; init + service-worker registration. |
 | `sw.js` | Offline cache. **Bump `VERSION` whenever any file changes.** |
@@ -54,9 +58,8 @@ Chrome menu → Install app.
 ## Roadmap (next steps, in priority order)
 1. Accuracy: optional 3rd "tie-break" pass only for flagged cells; split each photo into 2–3 vertical strips (header kept) if full-photo reading is weak.
 2. Show a zoomed crop of the photo for each review flag (needs bounding boxes in the schema).
-3. Remember the mask rectangle and reuse it on the next left-half photo.
-4. Weekly / monthly totals across saved dates; export to Excel (.xlsx via SheetJS CDN, cached by sw.js).
-5. Opening stock / new stock / balance calculation per drug.
+3. (done 2026-11-08: mask copy to all left halves; period report with per-date totals + CSV.) Next: Excel (.xlsx via SheetJS CDN, cached by sw.js); keep photos across a page reload (IndexedDB, masked copies only) so a quota stop can resume next day.
+4. Opening stock / new stock / balance calculation per drug.
 
 ## Working style
 - Make small, focused changes; keep functions in the file that owns them (see map).

@@ -12,7 +12,7 @@ async function gemini(b64,pass){
     const j=await r.json().catch(()=>({}));
     if(r.status===429||r.status>=500){
       let wait=30; const ri=(j.error?.details||[]).find(x=>x.retryDelay); if(ri) wait=parseInt(ri.retryDelay)+2;
-      if(/per day|PerDay/i.test(j.error?.message||'')) throw new Error('Daily free quota used up — try again after ~2 PM Bangladesh time (midnight Pacific).');
+      if(/per day|PerDay/i.test(j.error?.message||'')){ const er=new Error(`Daily free quota used up for ${model}.`); er.quota=true; throw er; }
       log(`  ⏳ rate-limited, waiting ${wait}s…`); await sleep(wait*1000); continue;
     }
     if(!r.ok) throw new Error(j.error?.message||('HTTP '+r.status));

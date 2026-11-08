@@ -37,14 +37,17 @@
 </section>
 
 <section class="card noprint">
-  <h2>1 · Date & photos</h2>
+  <h2>1 · Dates & photos</h2>
   <div class="row">
     <div><label>Register date</label><input type="date" id="date"></div>
     <div><label>Saved days</label><select id="history" onchange="openDay(this.value)"><option value="">— open saved —</option></select></div>
   </div>
-  <label>Add photos (left + right halves of each page; up to 15 pages = 30 photos)</label>
+  <label>Add photos for the date above (left + right half of each page; up to 15 pages = 30 photos per date)</label>
   <input type="file" id="files" accept="image/*" multiple>
-  <p class="mut">Each photo: tap <b>Mask</b> and drag a box over the names / P-No column (left halves), or tap <b>No names</b> for right halves. Page numbers auto-fill 1,1,2,2,3,3… — change if needed.</p>
+  <p class="mut"><b>Many dates at once (a week, 15 days, a month):</b> pick a date → add that date's photos → pick the next date → add its photos … then press Start once.<br>
+  <b>Privacy, fastest way:</b> on each date tap <b>Right halves → No names</b>. Then on ONE left-half photo tap <b>Mask</b>, cover the names / P-No column and tap <b>✔ Done + same for all left halves</b>. Check every thumbnail: the black box must cover all names.<br>
+  Page numbers auto-fill 1,1,2,2,3,3… (left half first, then right half) — change if needed.</p>
+  <div class="row"><span id="photoSum" class="mut" style="flex:3"></span><button onclick="clearPhotos()">🗑 Clear all photos</button></div>
   <div class="photos" id="photos"></div>
 </section>
 
@@ -85,6 +88,23 @@
   <div id="t-notes" style="display:none" class="mut"></div>
 </section>
 
+<section class="card" id="periodCard">
+  <h2>4 · Period report (week / 15 days / month)</h2>
+  <p class="mut noprint">Adds up every <b>saved</b> date in the period: one line per register item, the period total and each date's total.</p>
+  <div class="row noprint">
+    <div><label>From</label><input type="date" id="pFrom"></div>
+    <div><label>To</label><input type="date" id="pTo"></div>
+  </div>
+  <div class="row noprint" style="margin-top:8px">
+    <button class="pri" onclick="renderPeriod()">Show period totals</button>
+    <button onclick="exportPeriodCSV()">⬇ CSV</button>
+    <button onclick="copyPeriod()">📋 Copy</button>
+    <button onclick="window.print()">🖨 PDF</button>
+  </div>
+  <div id="pStats" class="mut" style="margin:8px 0"></div>
+  <div class="scroll"><table id="pTbl" class="pt"></table></div>
+</section>
+
 </main>
 
 <div id="ed">
@@ -93,6 +113,7 @@
     <button onclick="edUndo()">↶ Undo box</button>
     <button onclick="edClear()">Clear</button>
     <button class="pri" onclick="edDone()">✔ Done</button>
+    <button class="pri" onclick="edDone(true)">✔ Done + same for all left halves</button>
   </div>
   <div class="hint">Drag to black-out names / P-No. Rotate so headers read upright (helps accuracy).</div>
   <div class="cv"><canvas id="edc"></canvas></div>

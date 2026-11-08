@@ -4,6 +4,7 @@ let photos = [];        // {id,file,url,page,masked,noNames,rot,rects,status,hal
 let day = null;         // {date, cells:{key:{...}}, notes:[], extras:{norm:label}, pages:n}
 let ed = null;
 const $ = s => document.querySelector(s);
+const fmtD = d => String(d||'').split('-').reverse().join('-');   // 2026-11-08 -> 08-11-2026
 // Safe display: AI/user text is shown as text, never as HTML.
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Privacy filter for AI free text, applied BEFORE anything is stored (backup in case a mask missed a name).

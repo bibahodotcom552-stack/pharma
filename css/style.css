@@ -39,6 +39,10 @@ tr.extra td:first-child{border-left:3px solid var(--ac)}
 #log{font:12px/1.4 ui-monospace,monospace;color:var(--mut);white-space:pre-wrap;max-height:180px;overflow:auto}
 .prog{height:8px;background:#0b1222;border-radius:9px;overflow:hidden;margin:8px 0}
 .prog div{height:100%;width:0;background:var(--ac);transition:width .3s}
+.grp{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0 0;border-top:1px solid var(--line);font-size:14px}
+.grp button{padding:6px 10px;font-size:12px}
+.pt th:first-child,.pt td:first-child{position:sticky;left:0;background:var(--card);z-index:1;min-width:150px}
+.pt th:first-child{z-index:2}
 /* editor */
 #ed{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column}
 #ed .tb{display:flex;gap:6px;padding:8px;background:#111;flex-wrap:wrap}
