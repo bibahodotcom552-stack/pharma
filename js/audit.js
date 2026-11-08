@@ -4,7 +4,7 @@ function log(s){ const l=$('#log'); l.textContent+=s+'\n'; l.scrollTop=l.scrollH
 const norm=s=>(s||'').toLowerCase().replace(/tab(let)?s?|cap(sule)?s?|syp|syrup|inj|\bpid\b|[^a-z0-9.]/g,'').replace(/\.(?!\d)/g,'');
 function drugOf(half,col,extra){
   if(col>0){ const arr=half==='A'?HALF_A:HALF_B; if(col<=arr.length) return {k:half+col,label:arr[col-1]}; }
-  const label=(extra||'Unknown handwritten drug').trim(); return {k:'X:'+norm(label),label,extra:true};
+  const label=scrub(extra,60)||'Unknown handwritten drug'; return {k:'X:'+norm(label),label,extra:true};
 }
 
 async function runAudit(){
@@ -26,6 +26,7 @@ async function runAudit(){
         p.res.push(await gemini(b64,k));
         done++; $('#bar').style.width=(100*done/total)+'%';
       }
+      for(const r of p.res) r.half = r.half==='B'?'B':'A';   // only A/B ever reaches the screen
       p.half=p.res[0].half; p.status='done';
       log(`  ✔ half ${p.half}: ${p.res.map(r=>(r.entries||[]).length).join(' / ')} entries`);
     }catch(e){ p.status='err'; log('  ✖ '+e.message); done+=passes-p.res.length; $('#bar').style.width=(100*done/total)+'%'; if(/quota|API key|model/i.test(e.message)) break; }
@@ -44,11 +45,12 @@ function reconcile(){
         if(!(e.row>=1&&e.row<=ROWS)||!(e.qty>0)) continue;
         const d=drugOf(half,e.col,e.extra_name);
         const key=`${p.page}|${half}|${e.row}|${d.k}`;
-        const m=maps[ri]; if(m[key]){ m[key].qty+=e.qty; m[key].conf=false; m[key].raw+='+'+(e.raw||e.qty); }
-        else m[key]={qty:e.qty,conf:e.confident!==false,raw:e.raw||String(e.qty),d};
+        const raw=rawNum(e.raw)||String(e.qty);
+        const m=maps[ri]; if(m[key]){ m[key].qty+=e.qty; m[key].conf=false; m[key].raw+='+'+raw; }
+        else m[key]={qty:e.qty,conf:e.confident!==false,raw,d};
       }
-      for(const n of (r.notes||[])) day.notes.push(`Page ${p.page} half ${half} (pass ${ri+1}): ${n}`);
-      for(const x of (r.extra_columns||[])) day.notes.push(`Page ${p.page}: handwritten drug "${x.as_written}" → read as "${x.interpreted}"`);
+      for(const n of (r.notes||[])) day.notes.push(`Page ${p.page} half ${half} (pass ${ri+1}): ${scrub(n)}`);
+      for(const x of (r.extra_columns||[])) day.notes.push(`Page ${p.page}: handwritten drug "${scrub(x.as_written,60)}" → read as "${scrub(x.interpreted,60)}"`);
     });
     const keys=new Set(maps.flatMap(m=>Object.keys(m)));
     for(const key of keys){

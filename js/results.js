@@ -18,7 +18,7 @@ function renderTable(){
   let h=`<thead><tr><th>Drug</th>${Array.from({length:P},(_,i)=>`<th class="n">P${i+1}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>`;
   for(const d of allDrugs()){
     const o=t[d.k]; if(!o&&!all) continue;
-    h+=`<tr class="${o&&o.flag?'flag':''} ${d.extra?'extra':''}"><td>${d.label}${o&&o.flag?' ⚠️':''}<div class="noprint"><a href="#" style="color:var(--mut);font-size:11px" onclick="editDrug('${d.k}',this);return false">edit</a></div></td>`+
+    h+=`<tr class="${o&&o.flag?'flag':''} ${d.extra?'extra':''}"><td>${esc(d.label)}${o&&o.flag?' ⚠️':''}<div class="noprint"><a href="#" style="color:var(--mut);font-size:11px" onclick="editDrug('${d.k}',this);return false">edit</a></div></td>`+
       Array.from({length:P},(_,i)=>`<td class="n">${o&&o.pages[i+1]?o.pages[i+1]:''}</td>`).join('')+`<td class="n"><b>${o?o.total:0}</b></td></tr>`;
   }
   $('#tbl').innerHTML=h+'</tbody>';
@@ -28,7 +28,7 @@ function editDrug(k,a){
   const cs=Object.entries(day.cells).filter(([,c])=>c.dk===k).sort((x,y)=>x[1].page-y[1].page||x[1].row-y[1].row);
   const d=document.createElement('div'); d.className='drugedit';
   d.innerHTML=(cs.map(([key,c])=>`<div>P${c.page} row ${c.row}: <input type="number" value="${c.final}" onchange="setCell('${key}',this.value)"> ${c.v2!==null&&c.v1!==c.v2?`<span class="badge b-w">${c.v1} vs ${c.v2}</span>`:''}</div>`).join('')||'<div>No entries</div>')
-    +(k.startsWith('X:')?`<div>Rename: <input type="text" style="width:160px" value="${day.extras[k]}" onchange="renameExtra('${k}',this.value)"></div>`:'');
+    +(k.startsWith('X:')?`<div>Rename: <input type="text" style="width:160px" value="${esc(day.extras[k])}" onchange="renameExtra('${k}',this.value)"></div>`:'');
   box.appendChild(d);
 }
 function setCell(key,v){ const c=day.cells[key]; c.final=+v||0; c.ok=true; saveDay(); renderTable(); renderFlags(); }
@@ -37,14 +37,14 @@ function renderFlags(){
   const fs=Object.entries(day.cells).filter(([,c])=>c.flag&&!c.ok).sort((a,b)=>a[1].page-b[1].page||a[1].row-b[1].row);
   $('#flagCount').textContent=fs.length?`(${fs.length})`:'';
   $('#t-flags').innerHTML = fs.length? '<p class="mut">Check each against the paper register, correct the number, tap ✔.</p>'+fs.map(([key,c])=>
-    `<div class="flagbox"><b>Page ${c.page} · half ${c.half} · row ${c.row}</b><br>${c.label}<br>
-     ${c.v2!==null?`Pass 1 read <b>${c.v1||'—'}</b>, pass 2 read <b>${c.v2||'—'}</b>`:''} ${!c.conf?`· AI unsure (saw "${c.raw}")`:''}<br>
+    `<div class="flagbox"><b>Page ${c.page} · half ${c.half} · row ${c.row}</b><br>${esc(c.label)}<br>
+     ${c.v2!==null?`Pass 1 read <b>${c.v1||'—'}</b>, pass 2 read <b>${c.v2||'—'}</b>`:''} ${!c.conf?`· AI unsure (saw "${esc(c.raw)}")`:''}<br>
      Final: <input type="number" value="${c.final}" id="f_${btoa(key).replace(/=/g,'')}"> <button onclick="setCell('${key}',document.getElementById('f_${btoa(key).replace(/=/g,'')}').value)">✔ Confirm</button></div>`).join('')
     : '<p>✅ Nothing to review.</p>';
 }
-function renderNotes(){ $('#t-notes').innerHTML = day.notes.length? '<ul>'+day.notes.map(n=>`<li>${n.replace(/</g,'&lt;')}</li>`).join('')+'</ul>':'No notes.'; }
+function renderNotes(){ $('#t-notes').innerHTML = day.notes.length? '<ul>'+day.notes.map(n=>`<li>${esc(n)}</li>`).join('')+'</ul>':'No notes.'; }
 function tab(t){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); ['sum','flags','notes'].forEach(x=>$('#t-'+x).style.display=x===t?'block':'none'); }
-function fillManual(){ $('#mDrug').innerHTML=allDrugs().map(d=>`<option value="${d.k}">${d.label}</option>`).join(''); }
+function fillManual(){ $('#mDrug').innerHTML=allDrugs().map(d=>`<option value="${esc(d.k)}">${esc(d.label)}</option>`).join(''); }
 function manualAdd(){
   const pg=+$('#mPage').value||1, q=+$('#mQty').value; if(!q){alert('Enter quantity');return}
   let k=$('#mDrug').value, label=allDrugs().find(d=>d.k===k)?.label, nn=$('#mNew').value.trim();
@@ -68,5 +68,5 @@ function copyText(){
 }
 function saveDay(){ const d=store.get(); d.days=d.days||{}; d.days[day.date]={...day,saved:Date.now()}; store.set(d); fillHistory(); }
 function fillHistory(){ const d=store.get(); const ks=Object.keys(d.days||{}).sort().reverse();
-  $('#history').innerHTML='<option value="">— open saved —</option>'+ks.map(k=>`<option>${k}</option>`).join(''); }
+  $('#history').innerHTML='<option value="">— open saved —</option>'+ks.map(k=>`<option>${esc(k)}</option>`).join(''); }
 function openDay(k){ if(!k)return; const d=store.get(); day=d.days[k]; $('#date').value=k; render(); }
