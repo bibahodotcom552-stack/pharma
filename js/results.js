@@ -15,11 +15,11 @@ function renderTable(){
   const t=totals(), P=day.pages, all=$('#showAll').checked;
   const cells=Object.values(day.cells); const fl=cells.filter(c=>c.flag&&!c.ok).length;
   $('#stats').innerHTML=`${cells.filter(c=>c.final>0).length} dispensing entries · ${Object.keys(t).length} drugs used · ${P} page(s) · <span style="color:var(--warn)">${fl} to review</span>`;
-  let h=`<thead><tr><th>Drug</th>${Array.from({length:P},(_,i)=>`<th class="n">P${i+1}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>`;
+  let h=`<thead><tr><th>Drug</th><th class="n">Total</th></tr></thead><tbody>`;   // one line per register item, whole date
   for(const d of allDrugs()){
     const o=t[d.k]; if(!o&&!all) continue;
     h+=`<tr class="${o&&o.flag?'flag':''} ${d.extra?'extra':''}"><td>${esc(d.label)}${o&&o.flag?' ⚠️':''}<div class="noprint"><a href="#" style="color:var(--mut);font-size:11px" onclick="editDrug('${d.k}',this);return false">edit</a></div></td>`+
-      Array.from({length:P},(_,i)=>`<td class="n">${o&&o.pages[i+1]?o.pages[i+1]:''}</td>`).join('')+`<td class="n"><b>${o?o.total:0}</b></td></tr>`;
+      `<td class="n"><b>${o?o.total:0}</b></td></tr>`;
   }
   $('#tbl').innerHTML=h+'</tbody>';
 }
@@ -55,10 +55,10 @@ function manualAdd(){
 
 /* ================= EXPORT / HISTORY ================= */
 function exportCSV(){
-  const t=totals(),P=day.pages; const q=s=>`"${String(s).replace(/"/g,'""')}"`;
-  let csv='Date,Drug,'+Array.from({length:P},(_,i)=>'Page '+(i+1)).join(',')+',Total,Needs review\n';
+  const t=totals(); const q=s=>`"${String(s).replace(/"/g,'""')}"`;
+  let csv='Date,Drug,Total,Needs review\n';
   for(const d of allDrugs()){ const o=t[d.k]; if(!o) continue;
-    csv+=[day.date,q(d.label.replace(' ✍️',' (handwritten)')),...Array.from({length:P},(_,i)=>o.pages[i+1]||0),o.total,o.flag?'YES':''].join(',')+'\n'; }
+    csv+=[day.date,q(d.label.replace(' ✍️',' (handwritten)')),o.total,o.flag?'YES':''].join(',')+'\n'; }
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=`consumption_${day.date}.csv`; a.click();
 }
 function copyText(){

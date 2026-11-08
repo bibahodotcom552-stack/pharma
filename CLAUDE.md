@@ -7,7 +7,8 @@ At the end of every session (or when I type /handoff) update HANDOFF.md.
 
 ## What it is
 Mobile web app (PWA) for a pharmacist in Bangladesh. Reads photos of the handwritten IRC
-"Daily Consumption" register and returns the total quantity of each drug per page and per day.
+"Daily Consumption" register and returns ONE total per register item (generic + strength) for the whole date, across all uploaded photos.
+Output (screen, CSV, Copy) = Drug + Total only; never patient details.
 Each sheet is 38 patient rows x 87 printed drug columns, photographed as two halves:
 - Half A = Acetylsalicylic acid ... Furosemide (40 columns, includes names/P-No column)
 - Half B = Glibenclamide ... Zinc Oxide (47 columns) + blank columns for up to ~5 handwritten extra drugs

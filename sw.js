@@ -1,5 +1,5 @@
 // Offline app shell. BUMP VERSION whenever any app file changes, or phones keep the old copy.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const FILES = ['./','index.html','css/style.css','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png',
   ...['template','state','settings','photos','prompt','gemini','audit','results','app'].map(f=>`js/${f}.js`)];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); self.skipWaiting(); });
