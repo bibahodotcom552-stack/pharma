@@ -58,3 +58,4 @@ details summary{cursor:pointer;color:var(--ac)}
 .drugedit input{width:70px;padding:5px}
 footer{text-align:center;color:var(--mut);font-size:12px;padding:16px}
 @media print{header,.noprint,#ed{display:none!important}body{background:#fff;color:#000}.card{background:#fff;border:1px solid #999}th{background:#eee;color:#000}.scroll{max-height:none;overflow:visible}td,th{border-color:#bbb}}
+.ph input.pd{padding:3px;font-size:11px;width:auto;margin-top:4px}

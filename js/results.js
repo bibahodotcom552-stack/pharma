@@ -14,7 +14,7 @@ function render(){ $('#resultCard').style.display='block'; $('#resTitle').textCo
 function renderTable(){
   const t=totals(), P=day.pages, all=$('#showAll').checked;
   const cells=Object.values(day.cells); const fl=cells.filter(c=>c.flag&&!c.ok).length;
-  $('#stats').innerHTML=`${cells.filter(c=>c.final>0).length} dispensing entries · ${Object.keys(t).length} drugs used · ${P} page(s) · <span style="color:var(--warn)">${fl} to review</span>`;
+  $('#stats').innerHTML=`${cells.filter(c=>c.final>0).length} dispensing entries · ${Object.keys(t).length} drugs used · ${day.photos||P} photo(s) · <span style="color:var(--warn)">${fl} to review</span>${cells.some(c=>c.settled)?` · ${cells.filter(c=>c.settled).length} settled by 3rd reading`:''}`;
   let h=`<thead><tr><th>Drug</th><th class="n">Total</th></tr></thead><tbody>`;   // one line per register item, whole date
   for(const d of allDrugs()){
     const o=t[d.k]; if(!o&&!all) continue;
@@ -27,7 +27,7 @@ function editDrug(k,a){
   const box=a.parentNode; const ex=box.querySelector('.drugedit'); if(ex){ex.remove();return}
   const cs=Object.entries(day.cells).filter(([,c])=>c.dk===k).sort((x,y)=>x[1].page-y[1].page||x[1].row-y[1].row);
   const d=document.createElement('div'); d.className='drugedit';
-  d.innerHTML=(cs.map(([key,c])=>`<div>P${c.page} row ${c.row}: <input type="number" value="${c.final}" onchange="setCell('${key}',this.value)"> ${c.v2!==null&&c.v1!==c.v2?`<span class="badge b-w">${c.v1} vs ${c.v2}</span>`:''}</div>`).join('')||'<div>No entries</div>')
+  d.innerHTML=(cs.map(([key,c])=>`<div>Photo ${c.page} row ${c.row}: <input type="number" value="${c.final}" onchange="setCell('${key}',this.value)"> ${c.v2!==null&&c.v1!==c.v2?`<span class="badge b-w">${c.v1} vs ${c.v2}</span>`:''}</div>`).join('')||'<div>No entries</div>')
     +(k.startsWith('X:')?`<div>Rename: <input type="text" style="width:160px" value="${esc(day.extras[k])}" onchange="renameExtra('${k}',this.value)"></div>`:'');
   box.appendChild(d);
 }
@@ -37,8 +37,8 @@ function renderFlags(){
   const fs=Object.entries(day.cells).filter(([,c])=>c.flag&&!c.ok).sort((a,b)=>a[1].page-b[1].page||a[1].row-b[1].row);
   $('#flagCount').textContent=fs.length?`(${fs.length})`:'';
   $('#t-flags').innerHTML = fs.length? '<p class="mut">Check each against the paper register, correct the number, tap ✔.</p>'+fs.map(([key,c])=>
-    `<div class="flagbox"><b>Page ${c.page} · half ${c.half} · row ${c.row}</b><br>${esc(c.label)}<br>
-     ${c.v2!==null?`Pass 1 read <b>${c.v1||'—'}</b>, pass 2 read <b>${c.v2||'—'}</b>`:''} ${!c.conf?`· AI unsure (saw "${esc(c.raw)}")`:''}<br>
+    `<div class="flagbox"><b>Photo ${c.page} · half ${c.half} · row ${c.row}</b><br>${esc(c.label)}<br>
+     ${c.v2!==null?`Reading 1: <b>${c.v1||'—'}</b>, reading 2: <b>${c.v2||'—'}</b>`:''}${c.v3!==undefined?`, 3rd reading: <b>${c.v3||'—'}</b>`:''} ${!c.conf?`· AI unsure (saw "${esc(c.raw)}")`:''}<br>
      Final: <input type="number" value="${c.final}" id="f_${btoa(key).replace(/=/g,'')}"> <button onclick="setCell('${key}',document.getElementById('f_${btoa(key).replace(/=/g,'')}').value)">✔ Confirm</button></div>`).join('')
     : '<p>✅ Nothing to review.</p>';
 }
@@ -46,7 +46,7 @@ function renderNotes(){ $('#t-notes').innerHTML = day.notes.length? '<ul>'+day.n
 function tab(t){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); ['sum','flags','notes'].forEach(x=>$('#t-'+x).style.display=x===t?'block':'none'); }
 function fillManual(){ $('#mDrug').innerHTML=allDrugs().map(d=>`<option value="${esc(d.k)}">${esc(d.label)}</option>`).join(''); }
 function manualAdd(){
-  const pg=+$('#mPage').value||1, q=+$('#mQty').value; if(!q){alert('Enter quantity');return}
+  const pg=+$('#mPage').value||0, q=+$('#mQty').value; if(!q){alert('Enter quantity');return}
   let k=$('#mDrug').value, label=allDrugs().find(d=>d.k===k)?.label, nn=$('#mNew').value.trim();
   if(nn){k='X:'+norm(nn);label=nn;day.extras[k]=nn}
   const key=`${pg}|M|${Date.now()}|${k}`; day.cells[key]={page:pg,half:'M',row:0,dk:k,label,extra:k.startsWith('X:'),v1:q,v2:null,final:q,conf:true,flag:false,raw:'manual'};

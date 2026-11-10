@@ -20,6 +20,7 @@ RULES FOR QUANTITIES:
 - Trace every number straight up its grid column to the printed header; handwriting often spills over grid lines — assign to the column where most of the digit sits. If unsure, give best guess and confident=false.
 - If a number is overwritten or ambiguous (e.g. 1 vs 7, 4 vs 9, 6 vs 0), give best reading, put what you see in "raw", confident=false.
 - Ignore the bottom stock rows (BALANCE / NEW STOCK / TOTAL / STOCK BALANCE) unless filled — then mention in notes.
+DATE: on HALF A the register date is handwritten in the printed "SL NO / Date" box at the top-left, above the names column (e.g. "29-06-26"). Copy it into sheet_date exactly as written (day first). If no date is visible, leave sheet_date empty. Never guess a date.
 PRIVACY: NEVER output patient names, P/NO numbers or any personal information. Output only drug columns, row numbers and quantities.`;
 
 const PASS_TXT = [
@@ -37,5 +38,14 @@ const SCHEMA = {type:"OBJECT",properties:{
     raw:{type:"STRING"},
     confident:{type:"BOOLEAN"}},required:["row","col","qty","confident"]}},
   extra_columns:{type:"ARRAY",items:{type:"OBJECT",properties:{as_written:{type:"STRING"},interpreted:{type:"STRING"}}}},
+  sheet_date:{type:"STRING",description:"register date as written on the sheet, day first; empty if none visible"},
   notes:{type:"ARRAY",items:{type:"STRING"}}
 },required:["half","entries"]};
+
+// 3rd reading ("tie-break"): only the cells where the 2 readings disagreed or the AI was unsure.
+const tbText = (half,list) => `TIE-BREAK CHECK of half ${half}. Two earlier readings of this photo disagreed on the cells below.
+Look ONLY at these cells. For each one: find the printed header of the column, go straight down that column to SL row R,
+and give the number written in that cell (qty 0 if the cell is empty). The photo is upright.
+${list.map((c,i)=>`${i+1}. SL row ${c.row} — ${c.col?`printed column ${c.col} "${c.label}"`:`handwritten extra column "${c.label}"`}`).join(String.fromCharCode(10))}`;
+const TB_SCHEMA = {type:"OBJECT",properties:{cells:{type:"ARRAY",items:{type:"OBJECT",properties:{
+  n:{type:"INTEGER",description:"number of the cell in the list"},qty:{type:"NUMBER"},confident:{type:"BOOLEAN"}},required:["n","qty","confident"]}}},required:["cells"]};

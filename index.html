@@ -33,26 +33,30 @@
     <option value="2">2 passes — row-wise + column-wise, flags disagreements (recommended)</option>
     <option value="1">1 pass — faster, uses half the free quota</option>
   </select>
+  <label style="color:var(--tx)"><input type="checkbox" id="tbOn" checked> ⚖ 3rd reading to settle disagreements (one short extra request per photo that needs it)</label>
   <p class="mut">Key and results stay on this phone (browser storage). Photos are only sent to Google for reading, after your privacy mask is applied. Free-tier inputs may be used by Google to improve its models — that is why names must be masked.</p>
 </section>
 
 <section class="card noprint">
-  <h2>1 · Dates & photos</h2>
-  <div class="row">
-    <div><label>Register date</label><input type="date" id="date"></div>
-    <div><label>Saved days</label><select id="history" onchange="openDay(this.value)"><option value="">— open saved —</option></select></div>
+  <h2>1 · Photos</h2>
+  <label style="color:var(--tx)"><input type="checkbox" id="autoDate" checked onchange="$('#dateRow').style.display=this.checked?'none':''"> 📅 Read the date from each sheet (recommended)</label>
+  <div class="row" id="dateRow" style="display:none">
+    <div><label>Register date for the photos you add next</label><input type="date" id="date"></div>
   </div>
-  <label>Add photos for the date above (left + right half of each page; up to 15 pages = 30 photos per date)</label>
+  <div class="row"><div><label>Saved days</label><select id="history" onchange="openDay(this.value)"><option value="">— open saved —</option></select></div></div>
+  <label>Pick the register photos — a whole week or month at once is fine (keep the gallery order)</label>
   <input type="file" id="files" accept="image/*" multiple>
-  <p class="mut"><b>Many dates at once (a week, 15 days, a month):</b> pick a date → add that date's photos → pick the next date → add its photos … then press Start once.<br>
-  <b>Privacy, fastest way:</b> on each date tap <b>Right halves → No names</b>. Then on ONE left-half photo tap <b>Mask</b>, cover the names / P-No column and tap <b>✔ Done + same for all left halves</b>. Check every thumbnail: the black box must cover all names.<br>
-  Page numbers auto-fill 1,1,2,2,3,3… (left half first, then right half) — change if needed.</p>
+  <p class="mut">The phone does the rest <b>by itself, before anything is sent</b>: turns each photo upright, finds left / right half and blacks out the names / P-No column.
+  <b>Then just look at the small previews</b>: every left half must show a black bar over the names. Photos marked <b>❗</b> need you (tap <b>Mask</b> or <b>No names</b>).
+  The date is read from the left half (top of the names column); a right half has no date, so it gets the date of the left halves next to it in the gallery order.</p>
   <div class="row"><span id="photoSum" class="mut" style="flex:3"></span><button onclick="clearPhotos()">🗑 Clear all photos</button></div>
+  <div id="prepMsg" class="mut" style="color:var(--warn)"></div>
   <div class="photos" id="photos"></div>
 </section>
 
 <section class="card noprint">
   <h2>2 · Read & audit</h2>
+  <div id="pending" class="mut" style="color:var(--warn);margin-bottom:8px"></div>
   <button class="pri big" id="runBtn" onclick="runAudit()">▶ Start audit</button>
   <div class="prog"><div id="bar"></div></div>
   <div id="log"></div>
@@ -77,7 +81,7 @@
     <details class="noprint" style="margin-top:10px"><summary>➕ Add a missed entry manually</summary>
       <div class="row" style="margin-top:8px">
         <select id="mDrug" style="flex:3"></select>
-        <input type="number" id="mPage" placeholder="Page" min="1" style="flex:1">
+        <input type="number" id="mPage" placeholder="Photo #" min="0" style="flex:1">
         <input type="number" id="mQty" placeholder="Qty" style="flex:1">
         <button onclick="manualAdd()">Add</button>
       </div>
@@ -113,7 +117,7 @@
     <button onclick="edUndo()">↶ Undo box</button>
     <button onclick="edClear()">Clear</button>
     <button class="pri" onclick="edDone()">✔ Done</button>
-    <button class="pri" onclick="edDone(true)">✔ Done + same for all left halves</button>
+    <button class="pri" onclick="edDone(true)">✔ Done + same for all ❗ photos</button>
   </div>
   <div class="hint">Drag to black-out names / P-No. Rotate so headers read upright (helps accuracy).</div>
   <div class="cv"><canvas id="edc"></canvas></div>
@@ -124,6 +128,8 @@
 <script src="js/template.js"></script>
 <script src="js/state.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/keep.js"></script>
 <script src="js/photos.js"></script>
 <script src="js/prompt.js"></script>
 <script src="js/gemini.js"></script>

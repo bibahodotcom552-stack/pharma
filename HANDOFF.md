@@ -1,11 +1,14 @@
 # HANDOFF — current state (newest on top, keep under ~60 lines)
 
 ## Now
-- Status: Month mode built (many dates in one run, each date saved when finished, period report = period total + each date's total, CSV/Copy). Privacy filter + safe display done. Live: https://bibahodotcom552-stack.github.io/pharma/ (sw v5 after push). Mock tests PASS.
-- Next step: user runs ONE real date with a free Gemini key and compares with a hand count → fill Accuracy log.
-- Open questions: user to tick the 87 drug names against the printed register (list given 2026-11-08; the 87 are FIXED). Free limit ≈ 20 reads/day per Flash model (unofficial) → a month may take 1–3 days; photos are lost if the page is closed (IndexedDB resume = roadmap).
+- Status: **Auto mode** built (sw v7): user only picks photos → phone turns upright, finds half A/B, blacks out names (js/grid.js, 8/8 real photos right, offline check), AI reads sheet date (undated → date of photo before), 3rd tie-break reading, IndexedDB resume after a quota stop. Mock tests PASS.
+- Next step: user's first REAL test with a free Gemini key (e.g. the 29-06-26 photos) → compare 3 busy columns with a hand count → Accuracy log. Watch: is the date read? are ❗ photos rare?
+- Known (from real photos): date is handwritten ONLY on half A, in the "SL NO / Date" box top-left inside the header → mask starts below the header so the date stays visible; right halves get a date by gallery order (each date needs as many B as A).
 
 ## Log
+### 2026-11-10
+- Auto mode: grid.js (thin-line detector + tilt search; header = 2 wide bands at one end of the row direction; half A if names zone ≥14% AND colW/rowH ≥1.61 AND ≤50 columns, B if none, else ❗). Mask re-check on real photos: names zone 0% left, 40–43 drug columns kept.
+- keep.js (IndexedDB, masked copies only until read), cleanRes() before storing, assignDates/saveReadyDates, tie-break (gemini pass 'tb', TB_SCHEMA), photo numbers instead of page numbers.
 ### 2026-11-08 (later)
 - Global Claude setup done (~/.claude CLAUDE.md, agents, commands, settings.json; no backups needed — none existed). Repo: github.com/bibahodotcom552-stack/pharma (public), Pages from main/root.
 - Fixes: scrub()/rawNum() before storing AI text, esc() on screen; output = Drug + Total only (no page columns).

@@ -23,3 +23,4 @@ async function loadModels(){
 }
 $('#model').onchange=()=>{const d=store.get();d.model=$('#model').value;store.set(d)};
 $('#passes').onchange=()=>{const d=store.get();d.passes=$('#passes').value;store.set(d)};
+$('#tbOn').onchange=()=>{const d=store.get();d.tbOn=$('#tbOn').checked;store.set(d)};
